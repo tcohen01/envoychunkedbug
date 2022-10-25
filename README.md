@@ -6,6 +6,22 @@ immediate response body with the original server response's header.
 - This does not happen with processing mode BUFFERED
 - This does happen with STREAMED as well, but STREAMED does not guarantee ImmediateResponse to be properly sent back 
   to the client (may append or reset instead)
+- The bug seems to depend on the amount of chunks and buffering pacing
+  * Bug persists with size=1024&chunkedsize=512
+  * Bug inconsistent with size=1024&chunkedsize=1024
+  * Bug does not persist with size=1024&chunkedsize=2048
+
+The example consists of:
+* Ext_Proc service
+  * Returns empty responses to all http transaction stages except response body
+  * Returns ImmediateResponse for response body with "Immediate Response Body" as content
+* Simple http webserver
+  * `/chunked` - returns random base64 string in chunked transfer-encoding
+    * `size=1024` query param for base64 string size in bytes, defaults to 1024
+    * `chunksize=1024` query param for chunk size, defaults to 1024
+  * `/normal` - returns random base64 normally
+    * `size=1024` query param for base64 string size in bytes, defaults to 1024
+* Statically configured envoy routing requests to the webserver using the ext_proc http filter
 
 Usage:
 
