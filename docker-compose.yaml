@@ -1,0 +1,31 @@
+version: "3.9"
+networks:
+  envoychunkedbug-network:
+    name: envoychunkedbug-network
+    external: false
+services:
+  ext_proc:
+    container_name: chunked-ext-proc
+    image: "envoychunkedbug/ext_proc:dev"
+    expose:
+      - "8080"
+    networks:
+      - envoychunkedbug-network
+  httpserver:
+    container_name: chunked-http-server
+    image: "envoychunkedbug/http_server:dev"
+    expose:
+      - "8080"
+    networks:
+      - envoychunkedbug-network
+  envoy:
+    container_name: chunked-envoy
+    image: "envoyproxy/envoy:v1.24-latest"
+    ports:
+      - "9901:9901"
+      - "10000:10000"
+    volumes:
+      - ${PWD}/conf/envoy.yaml:/etc/envoy/envoy.yaml
+    command: ["/usr/local/bin/envoy", "-l", "debug", "-c", "/etc/envoy/envoy.yaml"]
+    networks:
+      - envoychunkedbug-network
